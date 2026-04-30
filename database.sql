@@ -1,0 +1,45 @@
+-- Invoice System Database Schema
+-- Import via phpMyAdmin
+
+CREATE DATABASE IF NOT EXISTS invoice_system CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE invoice_system;
+
+CREATE TABLE IF NOT EXISTS settings (
+  id INT PRIMARY KEY DEFAULT 1,
+  business_name VARCHAR(255) DEFAULT 'Nama Bisnis',
+  business_code VARCHAR(20) DEFAULT 'PRJ',
+  logo_data_url LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+INSERT IGNORE INTO settings (id, business_name, business_code) VALUES (1, 'Nama Bisnis', 'PRJ');
+
+CREATE TABLE IF NOT EXISTS invoice_counters (
+  month_year VARCHAR(7) PRIMARY KEY COMMENT 'Format: YYYY-MM',
+  counter INT DEFAULT 0,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS invoices (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  invoice_no VARCHAR(50) UNIQUE NOT NULL,
+  customer_name VARCHAR(255) NOT NULL,
+  invoice_date DATE NOT NULL,
+  notes TEXT,
+  grand_total DECIMAL(15,2) DEFAULT 0,
+  template TINYINT DEFAULT 1 COMMENT '1-5',
+  status ENUM('unpaid','paid') DEFAULT 'unpaid',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS invoice_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  invoice_id INT NOT NULL,
+  barang VARCHAR(255) NOT NULL,
+  qty INT NOT NULL DEFAULT 1,
+  harga DECIMAL(15,2) NOT NULL DEFAULT 0,
+  total DECIMAL(15,2) GENERATED ALWAYS AS (qty * harga) STORED,
+  FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE
+);
