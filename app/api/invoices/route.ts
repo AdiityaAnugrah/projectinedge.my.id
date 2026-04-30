@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import pool from '@/lib/db';
 import { buildInvoiceNo } from '@/lib/utils';
+import { getSession } from '@/lib/session';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
 export async function GET() {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const conn = await pool.getConnection();
   try {
     const [rows] = await conn.query<RowDataPacket[]>(
@@ -13,8 +17,10 @@ export async function GET() {
       ) AS items_json
       FROM invoices i
       LEFT JOIN invoice_items ii ON ii.invoice_id = i.id
+      WHERE i.user_id = ?
       GROUP BY i.id
-      ORDER BY i.created_at DESC`
+      ORDER BY i.created_at DESC`,
+      [session.userId]
     );
     const invoices = rows.map((r) => ({
       ...r,
@@ -28,6 +34,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
   const body = await req.json();
   const { customer_name, invoice_date, notes, template, items, status } = body;
 
@@ -37,40 +46,41 @@ export async function POST(req: NextRequest) {
 
     const monthYear = invoice_date.slice(0, 7);
     await conn.query(
-      `INSERT INTO invoice_counters (month_year, counter) VALUES (?, 1)
+      `INSERT INTO invoice_counters (user_id, month_year, counter) VALUES (?, ?, 1)
        ON DUPLICATE KEY UPDATE counter = counter + 1`,
-      [monthYear]
+      [session.userId, monthYear]
     );
     const [counterRows] = await conn.query<RowDataPacket[]>(
-      'SELECT counter FROM invoice_counters WHERE month_year = ?',
-      [monthYear]
+      'SELECT counter FROM invoice_counters WHERE user_id = ? AND month_year = ?',
+      [session.userId, monthYear]
     );
     const counter = counterRows[0].counter as number;
 
-    const [settingRows] = await conn.query<RowDataPacket[]>('SELECT business_code FROM settings WHERE id = 1');
-    const code = settingRows[0]?.business_code || 'PRJ';
+    const [settingRows] = await conn.query<RowDataPacket[]>(
+      'SELECT business_code FROM settings WHERE user_id = ?',
+      [session.userId]
+    );
+    const code = settingRows[0]?.business_code || 'INV';
     const invoiceNo = buildInvoiceNo(counter, code, invoice_date);
 
     const grandTotal = (items as { qty: number; harga: number }[]).reduce(
-      (sum, i) => sum + i.qty * i.harga,
-      0
+      (sum, i) => sum + i.qty * i.harga, 0
     );
 
     const [result] = await conn.query<ResultSetHeader>(
-      'INSERT INTO invoices (invoice_no, customer_name, invoice_date, notes, grand_total, template, status) VALUES (?,?,?,?,?,?,?)',
-      [invoiceNo, customer_name, invoice_date, notes || '', grandTotal, template || 1, status || 'unpaid']
+      'INSERT INTO invoices (user_id, invoice_no, customer_name, invoice_date, notes, grand_total, template, status) VALUES (?,?,?,?,?,?,?,?)',
+      [session.userId, invoiceNo, customer_name, invoice_date, notes || '', grandTotal, template || 1, status || 'unpaid']
     );
-    const invoiceId = result.insertId;
 
     for (const item of items as { barang: string; qty: number; harga: number }[]) {
       await conn.query(
         'INSERT INTO invoice_items (invoice_id, barang, qty, harga) VALUES (?,?,?,?)',
-        [invoiceId, item.barang, item.qty, item.harga]
+        [result.insertId, item.barang, item.qty, item.harga]
       );
     }
 
     await conn.commit();
-    return NextResponse.json({ id: invoiceId, invoice_no: invoiceNo }, { status: 201 });
+    return NextResponse.json({ id: result.insertId, invoice_no: invoiceNo }, { status: 201 });
   } catch (e) {
     await conn.rollback();
     throw e;

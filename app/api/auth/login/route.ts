@@ -13,16 +13,23 @@ export async function POST(req: NextRequest) {
   const conn = await pool.getConnection();
   try {
     const [rows] = await conn.query<RowDataPacket[]>(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
+      'SELECT * FROM users WHERE username = ? OR email = ?',
+      [username, username]
     );
     const user = rows[0];
+
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return NextResponse.json({ error: 'Nama pengguna atau kata sandi salah' }, { status: 401 });
     }
+    if (!user.is_verified) {
+      return NextResponse.json({ error: 'Email belum diverifikasi. Cek inbox Anda.' }, { status: 403 });
+    }
+    if (!user.is_active) {
+      return NextResponse.json({ error: 'Akun Anda telah dinonaktifkan. Hubungi admin.' }, { status: 403 });
+    }
 
-    const token = await signToken({ userId: user.id, username: user.username });
-    const res = NextResponse.json({ ok: true, username: user.username });
+    const token = await signToken({ userId: user.id, username: user.username, role: user.role });
+    const res = NextResponse.json({ ok: true, username: user.username, role: user.role });
     res.cookies.set(cookieName(), token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

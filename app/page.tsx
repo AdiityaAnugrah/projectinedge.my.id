@@ -33,6 +33,7 @@ export default function Home() {
   const [settings, setSettings] = useState<Settings>({ business_name: 'Nama Bisnis', business_code: 'PRJ' });
   const [saving, setSaving] = useState(false);
   const [username, setUsername] = useState('');
+  const [role, setRole] = useState('');
   const printRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -42,7 +43,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.username) setUsername(d.username); }).catch(() => {});
+    fetch('/api/auth/me').then(r => r.json()).then(d => { if (d.username) { setUsername(d.username); setRole(d.role); } }).catch(() => {});
     fetch('/api/settings').then(r => r.json()).then(setSettings).catch(() => {});
     fetchHistory();
   }, []);
@@ -155,6 +156,9 @@ export default function Home() {
           </div>
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {username && <span style={{ fontSize: '0.8rem', color: '#888', fontFamily: 'sans-serif' }}>👤 {username}</span>}
+            {role === 'superadmin' && (
+              <button onClick={() => router.push('/admin')} style={btnSt('#1a1a1a')}>🛡 Admin</button>
+            )}
             <button onClick={() => { setShowHistory(true); fetchHistory(); }} style={btnSt('#f0f0f0', '#333')}>📋 Riwayat</button>
             <button onClick={() => setShowTweaks(p => !p)} style={btnSt(showTweaks ? accentColor : '#f0f0f0', showTweaks ? '#fff' : '#333')}>⚙ Pengaturan</button>
             <button onClick={handleLogout} style={btnSt('#fff0ee', '#c0392b')}>🚪 Keluar</button>
@@ -286,8 +290,7 @@ export default function Home() {
               fontFamily={fontFamily} setFontFamily={setFontFamily}
               fontSize={fontSize} setFontSize={setFontSize}
               accentColor={accentColor} setAccentColor={setAccentColor}
-              businessName={settings.business_name} setBusinessName={v => setSettings(p => ({ ...p, business_name: v }))}
-              businessCode={settings.business_code} setBusinessCode={v => setSettings(p => ({ ...p, business_code: v.toUpperCase() }))}
+              settings={settings} setSettings={setSettings}
               onLogoUpload={url => setSettings(p => ({ ...p, logo_data_url: url }))}
               onSaveSettings={handleSaveSettings}
             />

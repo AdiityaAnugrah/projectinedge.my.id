@@ -6,17 +6,23 @@ function secret() {
   return new TextEncoder().encode(process.env.JWT_SECRET!);
 }
 
-export async function signToken(payload: { userId: number; username: string }) {
-  return new SignJWT(payload)
+export interface SessionPayload {
+  userId: number;
+  username: string;
+  role: 'superadmin' | 'owner';
+}
+
+export async function signToken(payload: SessionPayload) {
+  return new SignJWT(payload as unknown as Record<string, unknown>)
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('7d')
     .sign(await secret());
 }
 
-export async function verifyToken(token: string): Promise<{ userId: number; username: string } | null> {
+export async function verifyToken(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, await secret());
-    return payload as { userId: number; username: string };
+    return payload as unknown as SessionPayload;
   } catch {
     return null;
   }

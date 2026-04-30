@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function LoginPage() {
   const [username, setUsername] = useState('');
@@ -96,6 +97,10 @@ export default function LoginPage() {
             >
               {loading ? 'Masuk...' : 'Masuk →'}
             </button>
+            <p style={{ textAlign: 'center', marginTop: '14px', fontSize: '0.85rem', color: '#888' }}>
+              Belum punya akun?{' '}
+              <Link href="/register" style={{ color: '#e07830', fontWeight: 700 }}>Daftar di sini</Link>
+            </p>
           </form>
         </div>
       </div>
