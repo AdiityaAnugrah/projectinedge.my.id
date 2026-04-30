@@ -107,12 +107,17 @@ export default function Home() {
   }
 
   async function handleSaveSettings() {
-    await fetch('/api/settings', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(settings),
-    });
-    alert('Pengaturan berhasil disimpan!');
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+      if (!res.ok) throw new Error('Gagal');
+      alert('Pengaturan berhasil disimpan!');
+    } catch {
+      alert('Gagal menyimpan pengaturan. Coba lagi.');
+    }
   }
 
   const previewInvoice: Partial<Invoice> = { ...form, grand_total: grandTotal };
