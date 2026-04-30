@@ -6,6 +6,12 @@ interface Props {
   setTemplate: (n: number) => void;
   showLogo: boolean;
   setShowLogo: (v: boolean) => void;
+  logoSize: number;
+  setLogoSize: (v: number) => void;
+  logoAlign: 'left' | 'center' | 'right';
+  setLogoAlign: (v: 'left' | 'center' | 'right') => void;
+  alamatPos: 'header' | 'footer';
+  setAlamatPos: (v: 'header' | 'footer') => void;
   fontFamily: string;
   setFontFamily: (v: string) => void;
   fontSize: number;
@@ -80,6 +86,36 @@ export default function TweaksPanel(props: Props) {
           Tampilkan Logo
         </label>
         <input type="file" accept="image/*" onChange={handleLogo} style={{ fontSize: '0.72rem', marginTop: '4px', width: '100%' }} />
+        {props.showLogo && (
+          <>
+            <div style={{ marginTop: '6px' }}>
+              <span style={label}>Ukuran Logo ({props.logoSize}px)</span>
+              <input type="range" min={12} max={60} value={props.logoSize} onChange={e => props.setLogoSize(Number(e.target.value))} style={{ width: '100%' }} />
+            </div>
+            <div style={{ marginTop: '6px' }}>
+              <span style={label}>Posisi Logo</span>
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {(['left', 'center', 'right'] as const).map(v => (
+                  <button key={v} onClick={() => props.setLogoAlign(v)}
+                    style={{ flex: 1, padding: '3px 0', border: `1px solid ${props.logoAlign === v ? '#e07830' : '#ddd'}`, background: props.logoAlign === v ? '#e07830' : '#fff', color: props.logoAlign === v ? '#fff' : '#333', borderRadius: '5px', cursor: 'pointer', fontSize: '0.75rem', fontFamily: 'inherit' }}>
+                    {v === 'left' ? '← Kiri' : v === 'center' ? '↔ Tengah' : 'Kanan →'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+        <div style={{ marginTop: '6px' }}>
+          <span style={label}>Posisi Alamat</span>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {(['header', 'footer'] as const).map(v => (
+              <button key={v} onClick={() => props.setAlamatPos(v)}
+                style={{ flex: 1, padding: '3px 0', border: `1px solid ${props.alamatPos === v ? '#e07830' : '#ddd'}`, background: props.alamatPos === v ? '#e07830' : '#fff', color: props.alamatPos === v ? '#fff' : '#333', borderRadius: '5px', cursor: 'pointer', fontSize: '0.75rem', fontFamily: 'inherit' }}>
+                {v === 'header' ? '↑ Di Atas' : '↓ Di Bawah'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Tampilan */}

@@ -25,6 +25,9 @@ export default function Home() {
   const [template, setTemplate] = useState(1);
   const [accentColor, setAccentColor] = useState('#e07830');
   const [showLogo, setShowLogo] = useState(true);
+  const [logoSize, setLogoSize] = useState(20);
+  const [logoAlign, setLogoAlign] = useState<'left' | 'center' | 'right'>('left');
+  const [alamatPos, setAlamatPos] = useState<'header' | 'footer'>('header');
   const [fontFamily, setFontFamily] = useState("'Kalam', cursive");
   const [fontSize, setFontSize] = useState(11);
   const [showHistory, setShowHistory] = useState(false);
@@ -144,7 +147,7 @@ export default function Home() {
 
       {/* Hidden print target */}
       <div id="print-area">
-        <InvoiceTemplate invoice={previewInvoice} settings={settings} template={template} accentColor={accentColor} showLogo={showLogo} fontFamily={fontFamily} fontSize={fontSize} />
+        <InvoiceTemplate invoice={previewInvoice} settings={settings} template={template} accentColor={accentColor} showLogo={showLogo} fontFamily={fontFamily} fontSize={fontSize} logoSize={logoSize} logoAlign={logoAlign} alamatPos={alamatPos} />
       </div>
 
       <div style={{ minHeight: '100vh', background: '#f5f4f1', fontFamily: "'Kalam', cursive" }}>
@@ -273,6 +276,9 @@ export default function Home() {
                   showLogo={showLogo}
                   fontFamily={fontFamily}
                   fontSize={fontSize}
+                  logoSize={logoSize}
+                  logoAlign={logoAlign}
+                  alamatPos={alamatPos}
                 />
               </div>
             </div>
@@ -287,6 +293,9 @@ export default function Home() {
             <TweaksPanel
               template={template} setTemplate={setTemplate}
               showLogo={showLogo} setShowLogo={setShowLogo}
+              logoSize={logoSize} setLogoSize={setLogoSize}
+              logoAlign={logoAlign} setLogoAlign={setLogoAlign}
+              alamatPos={alamatPos} setAlamatPos={setAlamatPos}
               fontFamily={fontFamily} setFontFamily={setFontFamily}
               fontSize={fontSize} setFontSize={setFontSize}
               accentColor={accentColor} setAccentColor={setAccentColor}
