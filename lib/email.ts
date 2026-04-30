@@ -14,7 +14,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 const FROM = process.env.SMTP_FROM || 'noreply@projectinedge.my.id';
 
 export async function sendVerificationEmail(email: string, username: string, token: string) {
-  const verifyUrl = `${APP_URL}/verify-email/${token}`;
+  const verifyUrl = `${APP_URL}/verify-email?token=${token}`;
 
   await transporter.sendMail({
     from: `"Pembuat Invoice" <${FROM}>`,
